@@ -8,7 +8,6 @@ class BSF:
     def __init__(self, executable_path="chromedriver91") -> None:
         self.driver = webdriver.Chrome(executable_path=executable_path)
         self.driver.get("https://accounts.binance.com/en/login")
-        self.email = ""
         if not os.path.isdir("cookies"):
             os.mkdir("cookies")
 
@@ -68,7 +67,7 @@ class BSF:
             ).click()
 
     def set_price(self, price):
-        id_Price = driver.find_element_by_xpath(
+        id_Price = self.driver.find_element_by_xpath(
                 f"""{self.ORDER_FORM}div[4]/form/div[1]/div/input"""
             ).get_attribute("id")
         self.driver.execute_script(
