@@ -113,3 +113,7 @@ Exiting due to channel error.
 console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at /tmp/rust_mozprofileXMfABl/search.json.mozlz4", (void 0)))
 1625861920545	Marionette	INFO	Listening on port 39239
 1625861920668	Marionette	WARN	TLS certificate errors will be ignored for this session
+1625862142079	Marionette	INFO	Stopped listening on port 39239
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
