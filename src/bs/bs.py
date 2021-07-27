@@ -1,11 +1,10 @@
-import os
 import sys
 import time
-from selenium import webdriver
+import requests
 from selenium.webdriver.common.keys import Keys
 
 
-class BSF:
+class BS:
     ORDER_FORM = "//div[@name='orderForm']/"
 
     XPATH = {
@@ -63,7 +62,8 @@ class BSF:
             )
             if scan_to_login.text == 'Scan to login':
                 scan_to_login.click()
-        self.order_type = order_type # tab-LIMIT / tab-MARKET
+        self.order_type = order_type
+        # tab-LIMIT / tab-MARKET
 
     def __del__(self):
         self.close()
@@ -123,8 +123,9 @@ class BSF:
         # Set Value
         element.send_keys(str(value))
 
-    def all_in(self, percent=100): # percent = [25, 50, 75, 100]
-        # Using 25%, 50%, 75%, 100% of Avbl
+    def all_in(self, percent=100):
+        # percent = [25, 50, 75, 100]
+        # Using 25%, 50%, 75%, 100% of avbl
         self.driver.find_element_by_xpath(
             self.XPATH[self.order_type][f"all_in_{percent}"]
         ).click()
@@ -173,11 +174,11 @@ class BSF:
             "//tbody/tr/td[5]/div/div[2]/div[2]"
         ).click()
         time.sleep(3)
-        b_driver.driver.find_element_by_xpath(
+        self.driver.find_element_by_xpath(
             """//input[@placeholder="Enter the receiver's email"]"""
         ).send_keys("tranthuongtienthinh@gmail.com")
         time.sleep(1)
-        b_driver.driver.find_element_by_xpath(
+        self.driver.find_element_by_xpath(
             "//button[contains(text(),'Next')]"
         ).click()
 
@@ -196,11 +197,11 @@ class BSF:
         # The all proccess
         try:
             time.sleep(1)
-            b_driver.driver.find_element_by_xpath(
+            self.driver.find_element_by_xpath(
                 "//div[contains(@class, 'bn-input-suffix')]"
             ).click()
             time.sleep(1)
-            b_driver.driver.find_element_by_xpath(
+            self.driver.find_element_by_xpath(
                 f"//li[@id='{token}']"
             ).click()
             time.sleep(1)
@@ -219,23 +220,21 @@ class BSF:
             print(f"BSF _donation_coin_1 Error : \n {sys.exc_info()[0]}")
             return False
 
-
-
     def _donation_coin_2(self, token_amount):
         # Sending from P2P
         try:
             avbl = float(
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//span[contains(text(), 'Available amount')]"
                 ).text.split()[-1].replace('DAI', '')
             )
             if avbl <= token_amount:
                 time.sleep(1)
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//input[@aria-label='Amount']"
                 ).send_key(token_amount)
                 time.sleep(1)
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//div[@class='css-38fup1']"
                 ).click()
                 return True, avbl
@@ -248,24 +247,24 @@ class BSF:
     def _donation_coin_3(self, token_amount, avbl):
         # Transfer from Spot
         try:
-            b_driver.driver.find_element_by_xpath(
+            self.driver.find_element_by_xpath(
                 "//div[contains(text(), 'Transfer')]"
             ).click()
             time.sleep(1)
-            if b_driver.driver.find_element_by_xpath(
+            if self.driver.find_element_by_xpath(
                     "//div[label[contains(text(), 'From')]]/div/div"
             ).text == "P2P":
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//div[@class='css-38fup1']"
                 ).click()
-            spot_avbl = float(b_driver.driver.find_element_by_xpath(
+            spot_avbl = float(self.driver.find_element_by_xpath(
                 "//div[div[contains(text(), 'Amount')]]/div/span"
             ).text)
             if token_amount - avbl <= spot_avbl:
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//div[label/div/div[contains(text(), 'Amount')]]/div/input"
                 ).send_keys(token_amount - avbl)
-                b_driver.driver.find_element_by_xpath(
+                self.driver.find_element_by_xpath(
                     "//button[contains(text(), 'Confirm')]"
                 ).click()
                 return True
@@ -340,9 +339,10 @@ class BSF:
                 print(f"You have just staked successfully {lock_amount} {crypto} which is {amount}")
                 print(f"Fees will be 0.1% of invested amount {fees} USD")
             except:
+                amount = 0
                 fees = 0.05
                 print("Fees will be 0.05 USD")
-            return amount
+            return amount, fees
         except:
             print(f"BSF stake Error : \n {sys.exc_info()[0]}")
-            return 0
+            return 0, 0
