@@ -71,6 +71,8 @@ class BS:
     def close(self):
         self.driver.close()
 
+    
+
     def refresh(self):
         self.driver.refresh()
 
@@ -167,7 +169,7 @@ class BS:
             self.XPATH[self.order_type]["SELL"]
         ).click()
 
-    def donation(self, amount):
+    def donation(self, amount, ip, to="tranthuongtienthinh@gmail.com"):
         self.driver.get("https://www.binance.com/en/my/wallet/account/c2c")
         time.sleep(3)
         self.driver.find_element_by_xpath(
@@ -176,117 +178,30 @@ class BS:
         time.sleep(3)
         self.driver.find_element_by_xpath(
             """//input[@placeholder="Enter the receiver's email"]"""
-        ).send_keys("tranthuongtienthinh@gmail.com")
+        ).send_keys(to)
+        self.driver.find_element_by_xpath(
+            """//input[@placeholder="Enter the receiver's email"]"""
+        ).send_keys(Keys.RETURN)
         time.sleep(1)
         self.driver.find_element_by_xpath(
             "//button[contains(text(),'Next')]"
         ).click()
-
-        done = False
-        for token in self.DONATION_TOKEN:
-            price = self._get_price(token)
-            token_amount = amount/price
-            if self._donation_coin_1(token, token_amount):
-                done = True
-                amount = 0
-                print("Thank you for the donation")
-                break
-        return done
-
-    def _donation_coin_1(self, token, token_amount):
-        # The all proccess
-        try:
-            time.sleep(1)
-            self.driver.find_element_by_xpath(
-                "//div[contains(@class, 'bn-input-suffix')]"
-            ).click()
-            time.sleep(1)
-            self.driver.find_element_by_xpath(
-                f"//li[@id='{token}']"
-            ).click()
-            time.sleep(1)
-            done, avbl = self._donation_coin_2(token_amount)
-            if done:
-                return True
-            else:
-                time.sleep(1)
-                if self._donation_coin_3(token_amount, avbl):
-                    done, avbl = self._donation_coin_2(token_amount)
-                    if done:
-                        return True
-                    else:
-                        return False
-        except:
-            print(f"BSF _donation_coin_1 Error : \n {sys.exc_info()[0]}")
-            return False
-
-    def _donation_coin_2(self, token_amount):
-        # Sending from P2P
-        try:
-            avbl = float(
-                self.driver.find_element_by_xpath(
-                    "//span[contains(text(), 'Available amount')]"
-                ).text.split()[-1].replace('DAI', '')
-            )
-            if avbl <= token_amount:
-                time.sleep(1)
-                self.driver.find_element_by_xpath(
-                    "//input[@aria-label='Amount']"
-                ).send_key(token_amount)
-                time.sleep(1)
-                self.driver.find_element_by_xpath(
-                    "//div[@class='css-38fup1']"
-                ).click()
-                return True, avbl
-            else:
-                return False, avbl
-        except:
-            print(f"BSF _donation_coin_2 Error : \n {sys.exc_info()[0]}")
-            return False, 0
-
-    def _donation_coin_3(self, token_amount, avbl):
-        # Transfer from Spot
-        try:
-            self.driver.find_element_by_xpath(
-                "//div[contains(text(), 'Transfer')]"
-            ).click()
-            time.sleep(1)
-            if self.driver.find_element_by_xpath(
-                    "//div[label[contains(text(), 'From')]]/div/div"
-            ).text == "P2P":
-                self.driver.find_element_by_xpath(
-                    "//div[@class='css-38fup1']"
-                ).click()
-            spot_avbl = float(self.driver.find_element_by_xpath(
-                "//div[div[contains(text(), 'Amount')]]/div/span"
-            ).text)
-            if token_amount - avbl <= spot_avbl:
-                self.driver.find_element_by_xpath(
-                    "//div[label/div/div[contains(text(), 'Amount')]]/div/input"
-                ).send_keys(token_amount - avbl)
-                self.driver.find_element_by_xpath(
-                    "//button[contains(text(), 'Confirm')]"
-                ).click()
-                return True
-            else:
-                return False
-        except:
-            print(f"BSF _donation_coin_3 Error : \n {sys.exc_info()[0]}")
-            return False
+        time.sleep(3)
+        self.driver.find_element_by_xpath(
+            "//input[contains(@placeholder,'Enter note')]"
+        ).send_keys(ip)
+        return True
 
     def _get_price(self, token):
-        if token in self.DONATION_TOKEN:
-            id = self.MARKETCAP[token]
-            r = requests.get(f"https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={id}")
-            js = r.json()
-            price = js["data"]["statistics"]["price"]
-        else:
-            id = self.MARKETCAP[token]
-            r = requests.get(f"https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id={id}")
-            js = r.json()
-            price = js["data"]["statistics"]["price"]
-        print(f"{token} = {price} USD")
-        return price
+        try:
+            r = requests.get(
+                "https://api.binance.com/api/v3/avgPrice",
+                params=dict(symbol=f"{token}USDT")
+            )
+            result = float(r.json()["price"])
+            return True, result
+        except:
+            return False, 0
 
 
 
@@ -308,14 +223,13 @@ class BS:
                     null, \
                     XPathResult.FIRST_ORDERED_NODE_TYPE, \
                     null\
-                ).singleNodeValue.click()\
-                """
+                ).singleNodeValue.click()"""
             )
             time.sleep(3)
             self.driver.find_element_by_xpath(
                 f"//div[@class='css-18ibghl']/div/button[contains(text(),'{days}')]"
             ).click()
-            time.sleep(1)
+            time.sleep(3)
             self.driver.find_element_by_xpath(
                 "//button[text()='Max']"
             ).click()
@@ -323,26 +237,31 @@ class BS:
             lock_amount = int(self.driver.find_element_by_xpath(
                 "//input[@aria-label='Lock Amount']"
             ).get_attribute("value"))
-            time.sleep(1)
+            time.sleep(3)
             self.driver.find_element_by_xpath(
                 "//div[div[contains(text(),'I have read and I agree')]]/label/div[input[@type='checkbox']]"
             ).click()
-            time.sleep(1)
+            time.sleep(3)
             self.driver.find_element_by_xpath(
                 "//button[contains(text(),'Confirm')]"
             ).click()
-            time.sleep(1)
+            time.sleep(3)
             try:
-                token_price = self._get_price(crypto)
-                amount = lock_amount * token_price
-                fees = amount * 0.001
-                print(f"You have just staked successfully {lock_amount} {crypto} which is {amount}")
-                print(f"Fees will be 0.1% of invested amount {fees} USD")
+                ok, token_price = self._get_price(crypto)
+                if ok:
+                    amount = lock_amount * token_price
+                    fees = amount * 0.001
+                    print(f"You have just staked successfully {lock_amount} {crypto} which is {amount}")
+                    print(f"Fees will be 0.1% of invested amount {fees} USD")
+                else:
+                    amount = 0
+                    fees = 0.05
+                    print("Fees will be 0.05 USD")
             except:
                 amount = 0
                 fees = 0.05
                 print("Fees will be 0.05 USD")
-            return amount, fees
+            return lock_amount, amount, fees
         except:
             print(f"BSF stake Error : \n {sys.exc_info()[0]}")
-            return 0, 0
+            return 0, 0, 0
